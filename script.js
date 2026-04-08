@@ -1,33 +1,65 @@
 // Your code here.
-const slider = document.querySelector('.items');
+const container = document.querySelector('.items');
+const items = document.querySelectorAll('.item');
 
-let isDown = false;
-let startX;
-let scrollLeft;
-
-slider.addEventListener('mousedown', (e) => {
-  isDown = true;
-  slider.classList.add('active');
-
-  startX = e.pageX - slider.offsetLeft;
-  scrollLeft = slider.scrollLeft;
+items.forEach(item => {
+  item.addEventListener('mousedown', startDragging);
 });
 
-slider.addEventListener('mouseleave', () => {
-  isDown = false;
-});
+function startDragging(e) {
+  const item = e.target;
+  
+  // Calculate the initial offset between the mouse and the top-left of the item
+  // This prevents the item from "snapping" its top-left corner to the cursor
+  let shiftX = e.clientX - item.getBoundingClientRect().left;
+  let shiftY = e.clientY - item.getBoundingClientRect().top;
 
-slider.addEventListener('mouseup', () => {
-  isDown = false;
-});
+  // Prepare the item for moving
+  item.style.position = 'absolute';
+  item.style.zIndex = 1000; // Bring to front
+  document.body.append(item); // Move to body to avoid parent overflow issues during drag
 
-slider.addEventListener('mousemove', (e) => {
-  if (!isDown) return;
+  function moveAt(pageX, pageY) {
+    let newX = pageX - shiftX;
+    let newY = pageY - shiftY;
 
-  e.preventDefault();
+    // Boundary Logic
+    const containerRect = container.getBoundingClientRect();
 
-  const x = e.pageX - slider.offsetLeft;
-  const walk = (x - startX) * 2; // scroll speed
+    // Horizontal bounds
+    if (newX < containerRect.left) newX = containerRect.left;
+    if (newX + item.offsetWidth > containerRect.right) {
+      newX = containerRect.right - item.offsetWidth;
+    }
 
-  slider.scrollLeft = scrollLeft - walk;
-});
+    // Vertical bounds
+    if (newY < containerRect.top) newY = containerRect.top;
+    if (newY + item.offsetHeight > containerRect.bottom) {
+      newY = containerRect.bottom - item.offsetHeight;
+    }
+
+    item.style.left = newX + 'px';
+    item.style.top = newY + 'px';
+  }
+
+  // Move the item under the pointer initially
+  moveAt(e.pageX, e.pageY);
+
+  function onMouseMove(event) {
+    moveAt(event.pageX, event.pageY);
+  }
+
+  // Listen for mousemove to drag the item
+  document.addEventListener('mousemove', onMouseMove);
+
+  // Drop the item on mouseup
+  document.onmouseup = function() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.onmouseup = null;
+  };
+
+  // Prevent default browser drag-and-drop behavior (like ghost images)
+  item.ondragstart = function() {
+    return false;
+  };
+}
