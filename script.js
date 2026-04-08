@@ -1,54 +1,33 @@
 // Your code here.
-const container = document.querySelector('.items');
-const items = document.querySelectorAll('.item');
+const slider = document.querySelector('.items');
 
-let isDragging = false;
-let currentItem = null;
-let offsetX = 0;
-let offsetY = 0;
+let isDown = false;
+let startX;
+let scrollLeft;
 
-items.forEach(item => {
-  item.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    currentItem = item;
+slider.addEventListener('mousedown', (e) => {
+  isDown = true;
+  slider.classList.add('active');
 
-    // Bring selected item on top
-    item.style.zIndex = 1000;
-
-    const rect = item.getBoundingClientRect();
-
-    // Calculate mouse offset inside the cube
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-
-    // Make position absolute so we can move it
-    item.style.position = 'absolute';
-  });
+  startX = e.pageX - slider.offsetLeft;
+  scrollLeft = slider.scrollLeft;
 });
 
-document.addEventListener('mousemove', (e) => {
-  if (!isDragging || !currentItem) return;
-
-  const containerRect = container.getBoundingClientRect();
-  const itemRect = currentItem.getBoundingClientRect();
-
-  // Calculate new position
-  let newLeft = e.clientX - containerRect.left - offsetX;
-  let newTop = e.clientY - containerRect.top - offsetY;
-
-  // Boundary constraints
-  newLeft = Math.max(0, Math.min(newLeft, containerRect.width - itemRect.width));
-  newTop = Math.max(0, Math.min(newTop, containerRect.height - itemRect.height));
-
-  // Apply position
-  currentItem.style.left = newLeft + 'px';
-  currentItem.style.top = newTop + 'px';
+slider.addEventListener('mouseleave', () => {
+  isDown = false;
 });
 
-document.addEventListener('mouseup', () => {
-  if (currentItem) {
-    currentItem.style.zIndex = 1;
-  }
-  isDragging = false;
-  currentItem = null;
+slider.addEventListener('mouseup', () => {
+  isDown = false;
+});
+
+slider.addEventListener('mousemove', (e) => {
+  if (!isDown) return;
+
+  e.preventDefault();
+
+  const x = e.pageX - slider.offsetLeft;
+  const walk = (x - startX) * 2; // scroll speed
+
+  slider.scrollLeft = scrollLeft - walk;
 });
