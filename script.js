@@ -2,63 +2,62 @@
 const container = document.querySelector('.items');
 const items = document.querySelectorAll('.item');
 
-let activeItem = null;
-let offset = { x: 0, y: 0 };
+let isDragging = false;
+let currentItem = null;
+let offsetX = 0;
+let offsetY = 0;
 
-// Initialize items for absolute positioning within the container
+// Make container relative so absolute children stay inside
+container.style.position = "relative";
+
 items.forEach(item => {
-  item.style.cursor = 'grab';
-  // We use mousedown on each item to select it
-  item.addEventListener('mousedown', (e) => {
-    activeItem = item;
-    activeItem.style.cursor = 'grabbing';
-    activeItem.style.zIndex = '1000'; // Bring to front
-    
-    // Calculate the distance between the mouse and the top-left of the item
-    const rect = activeItem.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
+  item.style.position = "absolute";
 
-    // Store the offset so the mouse stays at the same spot on the cube
-    offset.x = e.clientX - rect.left;
-    offset.y = e.clientY - rect.top;
-    
+  // Set initial grid positions
+  const rect = item.getBoundingClientRect();
+  const parentRect = container.getBoundingClientRect();
+
+  item.style.left = (rect.left - parentRect.left + container.scrollLeft) + "px";
+  item.style.top = (rect.top - parentRect.top) + "px";
+
+  item.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    currentItem = item;
+
+    const itemRect = item.getBoundingClientRect();
+
+    offsetX = e.clientX - itemRect.left;
+    offsetY = e.clientY - itemRect.top;
+
+    item.style.zIndex = 1000;
     container.classList.add('active');
   });
 });
 
-// Dragging logic attached to the window to ensure smooth movement even if mouse leaves item
-window.addEventListener('mousemove', (e) => {
-  if (!activeItem) return;
-
-  e.preventDefault();
+document.addEventListener('mousemove', (e) => {
+  if (!isDragging || !currentItem) return;
 
   const containerRect = container.getBoundingClientRect();
-  
-  // Calculate potential new positions relative to the container
-  let newX = e.clientX - containerRect.left - offset.x;
-  let newY = e.clientY - containerRect.top - offset.y;
 
-  // Boundary Constraints
-  const maxX = containerRect.width - activeItem.offsetWidth;
-  const maxY = containerRect.height - activeItem.offsetHeight;
+  let x = e.clientX - containerRect.left - offsetX + container.scrollLeft;
+  let y = e.clientY - containerRect.top - offsetY;
 
-  // Clamp values inside [0, max]
-  newX = Math.max(0, Math.min(newX, maxX));
-  newY = Math.max(0, Math.min(newY, maxY));
+  // Boundary constraints
+  const maxX = container.scrollWidth - currentItem.offsetWidth;
+  const maxY = container.offsetHeight - currentItem.offsetHeight;
 
-  // Apply styles
-  activeItem.style.position = 'absolute';
-  activeItem.style.left = `${newX}px`;
-  activeItem.style.top = `${newY}px`;
-  // Reset margins/transforms that might interfere with absolute positioning
-  activeItem.style.margin = '0';
+  x = Math.max(0, Math.min(x, maxX));
+  y = Math.max(0, Math.min(y, maxY));
+
+  currentItem.style.left = x + "px";
+  currentItem.style.top = y + "px";
 });
 
-// Drop logic
-window.addEventListener('mouseup', () => {
-  if (activeItem) {
-    activeItem.style.cursor = 'grab';
-    activeItem = null;
-    container.classList.remove('active');
+document.addEventListener('mouseup', () => {
+  if (currentItem) {
+    currentItem.style.zIndex = 1;
   }
+  isDragging = false;
+  currentItem = null;
+  container.classList.remove('active');
 });
