@@ -12,21 +12,17 @@ slider.addEventListener('mousedown', (e) => {
   scrollLeft = slider.scrollLeft;
 });
 
-slider.addEventListener('mouseleave', () => {
+window.addEventListener('mouseup', () => {
   isDown = false;
   slider.classList.remove('active');
 });
 
-slider.addEventListener('mouseup', () => {
-  isDown = false;
-  slider.classList.remove('active');
-});
+window.addEventListener('mousemove', (e) => {
+  if (!isDown) return;
 
-slider.addEventListener('mousemove', (e) => {
-  if (!isDown) return; // stop if not dragging
   e.preventDefault();
 
   const x = e.pageX - slider.offsetLeft;
-  const walk = (x - startX) * 2; // speed multiplier
+  const walk = (x - startX) * 2; // increase speed
   slider.scrollLeft = scrollLeft - walk;
 });
