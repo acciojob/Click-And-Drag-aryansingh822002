@@ -7,11 +7,9 @@ let scrollLeft;
 slider.addEventListener('mousedown', (e) => {
   isDown = true;
   slider.classList.add('active');
-  
-  // e.pageX is the mouse position, slider.offsetLeft is the container's edge
-  startX = e.pageX - slider.offsetLeft;
-  
-  // Record the current scroll position when we click down
+  // Use e.pageX for real interactions, falling back to clientX for test runners
+  const x = e.pageX || e.clientX;
+  startX = x - slider.offsetLeft;
   scrollLeft = slider.scrollLeft;
 });
 
@@ -26,19 +24,14 @@ slider.addEventListener('mouseup', () => {
 });
 
 slider.addEventListener('mousemove', (e) => {
-  // If we aren't clicking down, stop the function
-  if (!isDown) return; 
+  if (!isDown) return;
+  e.preventDefault();
   
-  // Prevent default behavior (like selecting text)
-  e.preventDefault(); 
+  // Use e.pageX for real interactions, falling back to clientX for test runners
+  const x = e.pageX || e.clientX;
+  const currentX = x - slider.offsetLeft;
   
-  // Calculate current mouse position
-  const x = e.pageX - slider.offsetLeft;
-  
-  // Calculate how far we've moved from the startX
-  // Multiplied by a factor (e.g., 3) to make the drag feel faster/smoother
-  const walk = (x - startX) * 3; 
-  
-  // Update the container's scroll position
+  // The 'walk' calculation determines how many pixels to scroll
+  const walk = (currentX - startX) * 3; 
   slider.scrollLeft = scrollLeft - walk;
 });
