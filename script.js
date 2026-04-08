@@ -1,64 +1,35 @@
 // Your code here.
-const container = document.querySelector('.items');
-const cubes = document.querySelectorAll('.item');
+const slider = document.querySelector('.items');
 
-let isDragging = false;
-let currentCube = null;
-let offsetX = 0;
-let offsetY = 0;
+let isDown = false;
+let startX;
+let scrollLeft;
 
-// Make container a boundary reference
-const containerRect = () => container.getBoundingClientRect();
+slider.addEventListener('mousedown', (e) => {
+  isDown = true;
+  slider.classList.add('active');
 
-cubes.forEach(cube => {
-
-  cube.style.position = "absolute"; // required for movement
-
-  // initial placement (grid-like)
-  const rect = cube.getBoundingClientRect();
-  const parentRect = container.getBoundingClientRect();
-
-  cube.style.left = rect.left - parentRect.left + "px";
-  cube.style.top = rect.top - parentRect.top + "px";
-
-  cube.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    currentCube = cube;
-
-    const rect = cube.getBoundingClientRect();
-
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-
-    cube.style.zIndex = 1000;
-  });
+  startX = e.pageX - slider.offsetLeft;
+  scrollLeft = slider.scrollLeft;
 });
 
-// Mouse move
-document.addEventListener('mousemove', (e) => {
-  if (!isDragging || !currentCube) return;
-
-  const parent = containerRect();
-
-  let x = e.clientX - parent.left - offsetX;
-  let y = e.clientY - parent.top - offsetY;
-
-  // Boundary constraints
-  const maxX = parent.width - currentCube.offsetWidth;
-  const maxY = parent.height - currentCube.offsetHeight;
-
-  x = Math.max(0, Math.min(x, maxX));
-  y = Math.max(0, Math.min(y, maxY));
-
-  currentCube.style.left = x + "px";
-  currentCube.style.top = y + "px";
+slider.addEventListener('mouseleave', () => {
+  isDown = false;
+  slider.classList.remove('active');
 });
 
-// Mouse up
-document.addEventListener('mouseup', () => {
-  if (currentCube) {
-    currentCube.style.zIndex = 1;
-  }
-  isDragging = false;
-  currentCube = null;
+slider.addEventListener('mouseup', () => {
+  isDown = false;
+  slider.classList.remove('active');
+});
+
+slider.addEventListener('mousemove', (e) => {
+  if (!isDown) return;
+
+  e.preventDefault();
+
+  const x = e.pageX - slider.offsetLeft;
+  const walk = (x - startX) * 2; // speed factor
+
+  slider.scrollLeft = scrollLeft - walk;
 });
