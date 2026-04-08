@@ -1,18 +1,12 @@
 // Your code here.
-// Draggable Cubes - Pure JavaScript Solution
+// Draggable Cubes - Preserving Original Scroll Behavior
 (function() {
-  // Get the defined area (container) and grid container
+  // Get elements
   const container = document.querySelector('.items');
-  const gridContainer = document.querySelector('.items');
   
   if (!container) {
     console.error('Container not found');
     return;
-  }
-  
-  // Make sure container has relative positioning for absolute positioning of cubes
-  if (getComputedStyle(container).position === 'static') {
-    container.style.position = 'relative';
   }
   
   // Get all cubes
@@ -23,12 +17,9 @@
   let isDragging = false;
   let startX = 0, startY = 0;
   let initialLeft = 0, initialTop = 0;
-  let dragThreshold = 5; // pixels to move before starting drag
+  let initialScrollLeft = 0;
   let hasMoved = false;
-  
-  // Store original positions for grid layout
-  let originalParent = null;
-  let originalIndex = null;
+  let dragThreshold = 5;
   
   // Function to get container boundaries
   function getBoundaries(cube) {
@@ -45,20 +36,6 @@
     };
   }
   
-  // Function to clamp position within boundaries
-  function clampPosition(clientX, clientY, cube) {
-    const boundaries = getBoundaries(cube);
-    let clampedX = clientX;
-    let clampedY = clientY;
-    
-    if (clampedX < boundaries.minX) clampedX = boundaries.minX;
-    if (clampedX > boundaries.maxX) clampedX = boundaries.maxX;
-    if (clampedY < boundaries.minY) clampedY = boundaries.minY;
-    if (clampedY > boundaries.maxY) clampedY = boundaries.maxY;
-    
-    return { x: clampedX, y: clampedY };
-  }
-  
   // Function to update cube position during drag
   function updateDragPosition(clientX, clientY) {
     if (!draggedCube || !isDragging) return;
@@ -69,13 +46,13 @@
     let newLeft = initialLeft + deltaX;
     let newTop = initialTop + deltaY;
     
-    // Get container relative coordinates
+    // Get container boundaries
     const containerRect = container.getBoundingClientRect();
     const cubeRect = draggedCube.getBoundingClientRect();
     const cubeWidth = cubeRect.width;
     const cubeHeight = cubeRect.height;
     
-    // Calculate boundaries in container-relative coordinates
+    // Calculate boundaries
     const maxLeft = containerRect.width - cubeWidth;
     const maxTop = containerRect.height - cubeHeight;
     
@@ -98,7 +75,6 @@
     const clientX = e.clientX;
     const clientY = e.clientY;
     
-    // Check if we've moved past the drag threshold
     if (!isDragging) {
       const deltaX = Math.abs(clientX - startX);
       const deltaY = Math.abs(clientY - startY);
@@ -108,11 +84,13 @@
         isDragging = true;
         hasMoved = true;
         
+        // Store initial scroll position
+        initialScrollLeft = container.scrollLeft;
+        
         // Convert cube from grid to absolute positioning
         const containerRect = container.getBoundingClientRect();
         const cubeRect = draggedCube.getBoundingClientRect();
         
-        // Store initial position in container-relative coordinates
         initialLeft = cubeRect.left - containerRect.left;
         initialTop = cubeRect.top - containerRect.top;
         
@@ -126,12 +104,10 @@
         draggedCube.style.zIndex = '9999';
         draggedCube.classList.add('dragging');
         
-        // Update start positions for drag
         startX = clientX;
         startY = clientY;
       }
     } else {
-      // Currently dragging - update position
       e.preventDefault();
       
       const deltaX = clientX - startX;
@@ -140,17 +116,14 @@
       let newLeft = initialLeft + deltaX;
       let newTop = initialTop + deltaY;
       
-      // Get container boundaries
       const containerRect = container.getBoundingClientRect();
       const cubeRect = draggedCube.getBoundingClientRect();
       const maxLeft = containerRect.width - cubeRect.width;
       const maxTop = containerRect.height - cubeRect.height;
       
-      // Clamp to boundaries
       newLeft = Math.max(0, Math.min(newLeft, maxLeft));
       newTop = Math.max(0, Math.min(newTop, maxTop));
       
-      // Update position
       draggedCube.style.left = newLeft + 'px';
       draggedCube.style.top = newTop + 'px';
     }
@@ -160,10 +133,9 @@
   function onMouseUp(e) {
     if (draggedCube) {
       if (!hasMoved) {
-        // Click without dragging - do nothing, cube stays in place
+        // Click without dragging - cube stays in place
         // No action needed
       } else if (isDragging) {
-        // Drag completed - cube stays in its new absolute position
         // Ensure cube is within boundaries
         const containerRect = container.getBoundingClientRect();
         const cubeRect = draggedCube.getBoundingClientRect();
@@ -172,70 +144,83 @@
         const maxLeft = containerRect.width - cubeRect.width;
         const maxTop = containerRect.height - cubeRect.height;
         
-        // Final boundary enforcement
         currentLeft = Math.max(0, Math.min(currentLeft, maxLeft));
         currentTop = Math.max(0, Math.min(currentTop, maxTop));
         draggedCube.style.left = currentLeft + 'px';
         draggedCube.style.top = currentTop + 'px';
         
-        // Remove dragging class
         draggedCube.classList.remove('dragging');
       }
       
-      // Reset drag state
       draggedCube = null;
       isDragging = false;
       hasMoved = false;
       
-      // Remove global event listeners
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
-      
-      // Restore text selection
       document.body.style.userSelect = '';
     }
   }
   
-  // Mouse down handler for each cube
+  // Mouse down handler
   function onMouseDown(e) {
-    // Prevent default to avoid text selection during drag
     e.preventDefault();
     e.stopPropagation();
     
-    // Get the cube that was clicked
     const cube = e.currentTarget;
     
-    // Don't start a new drag if already dragging
     if (isDragging) return;
     
-    // Store the cube being dragged
     draggedCube = cube;
     hasMoved = false;
     isDragging = false;
     
-    // Store mouse start position
     startX = e.clientX;
     startY = e.clientY;
     
-    // Store the cube's current position if it's already absolute
     if (cube.style.position === 'absolute') {
       initialLeft = parseFloat(cube.style.left);
       initialTop = parseFloat(cube.style.top);
     } else {
-      // For grid-positioned cubes, we'll calculate position when drag starts
       initialLeft = 0;
       initialTop = 0;
     }
     
-    // Disable text selection while dragging
     document.body.style.userSelect = 'none';
     
-    // Add global event listeners
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
   }
   
-  // Function to attach drag listeners to all cubes
+  // Handle container click and drag for scrolling (original functionality)
+  let isContainerDragging = false;
+  let containerStartX = 0;
+  let containerStartScrollLeft = 0;
+  
+  function onContainerMouseDown(e) {
+    // Only trigger container drag if not clicking on a cube
+    if (e.target.classList.contains('item')) return;
+    
+    e.preventDefault();
+    isContainerDragging = true;
+    containerStartX = e.pageX;
+    containerStartScrollLeft = container.scrollLeft;
+    container.classList.add('active');
+  }
+  
+  function onContainerMouseMove(e) {
+    if (!isContainerDragging) return;
+    e.preventDefault();
+    const walk = (e.pageX - containerStartX) * 2;
+    container.scrollLeft = containerStartScrollLeft - walk;
+  }
+  
+  function onContainerMouseUp() {
+    isContainerDragging = false;
+    container.classList.remove('active');
+  }
+  
+  // Attach drag listeners to all cubes
   function attachDragListeners() {
     cubes = document.querySelectorAll('.item');
     cubes.forEach(cube => {
@@ -244,7 +229,7 @@
     });
   }
   
-  // Handle window resize - reposition absolute positioned cubes to stay within bounds
+  // Handle window resize
   function handleResize() {
     const absoluteCubes = document.querySelectorAll('.item[style*="position: absolute"]');
     absoluteCubes.forEach(cube => {
@@ -266,12 +251,16 @@
     });
   }
   
-  // Initialize drag functionality
+  // Initialize
   function init() {
     attachDragListeners();
     window.addEventListener('resize', handleResize);
+    
+    // Add container drag listeners for scrolling
+    container.addEventListener('mousedown', onContainerMouseDown);
+    window.addEventListener('mousemove', onContainerMouseMove);
+    window.addEventListener('mouseup', onContainerMouseUp);
   }
   
-  // Start the application
   init();
 })();
