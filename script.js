@@ -1,65 +1,40 @@
 // Your code here.
-const container = document.querySelector('.items');
-const items = document.querySelectorAll('.item');
+const slider = document.querySelector('.items');
+let isDown = false;
+let startX;
+let scrollLeft;
 
-items.forEach(item => {
-  item.addEventListener('mousedown', startDragging);
+slider.addEventListener('mousedown', (e) => {
+  isDown = true;
+  slider.classList.add('active');
+  
+  // Get the initial click position relative to the container
+  startX = e.pageX - slider.offsetLeft;
+  
+  // Record the initial scroll position
+  scrollLeft = slider.scrollLeft;
 });
 
-function startDragging(e) {
-  const item = e.target;
+slider.addEventListener('mouseleave', () => {
+  isDown = false;
+  slider.classList.remove('active');
+});
+
+slider.addEventListener('mouseup', () => {
+  isDown = false;
+  slider.classList.remove('active');
+});
+
+slider.addEventListener('mousemove', (e) => {
+  if (!isDown) return; // Stop the function from running if mouse is not clicked
   
-  // Calculate the initial offset between the mouse and the top-left of the item
-  // This prevents the item from "snapping" its top-left corner to the cursor
-  let shiftX = e.clientX - item.getBoundingClientRect().left;
-  let shiftY = e.clientY - item.getBoundingClientRect().top;
-
-  // Prepare the item for moving
-  item.style.position = 'absolute';
-  item.style.zIndex = 1000; // Bring to front
-  document.body.append(item); // Move to body to avoid parent overflow issues during drag
-
-  function moveAt(pageX, pageY) {
-    let newX = pageX - shiftX;
-    let newY = pageY - shiftY;
-
-    // Boundary Logic
-    const containerRect = container.getBoundingClientRect();
-
-    // Horizontal bounds
-    if (newX < containerRect.left) newX = containerRect.left;
-    if (newX + item.offsetWidth > containerRect.right) {
-      newX = containerRect.right - item.offsetWidth;
-    }
-
-    // Vertical bounds
-    if (newY < containerRect.top) newY = containerRect.top;
-    if (newY + item.offsetHeight > containerRect.bottom) {
-      newY = containerRect.bottom - item.offsetHeight;
-    }
-
-    item.style.left = newX + 'px';
-    item.style.top = newY + 'px';
-  }
-
-  // Move the item under the pointer initially
-  moveAt(e.pageX, e.pageY);
-
-  function onMouseMove(event) {
-    moveAt(event.pageX, event.pageY);
-  }
-
-  // Listen for mousemove to drag the item
-  document.addEventListener('mousemove', onMouseMove);
-
-  // Drop the item on mouseup
-  document.onmouseup = function() {
-    document.removeEventListener('mousemove', onMouseMove);
-    document.onmouseup = null;
-  };
-
-  // Prevent default browser drag-and-drop behavior (like ghost images)
-  item.ondragstart = function() {
-    return false;
-  };
-}
+  e.preventDefault();
+  const x = e.pageX - slider.offsetLeft;
+  
+  // Calculate how far we have moved from the start point
+  // Multiply by a scalar (e.g., 3) for faster/smoother scrolling
+  const walk = (x - startX) * 2; 
+  
+  // Update the container's scroll position
+  slider.scrollLeft = scrollLeft - walk;
+});
