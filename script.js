@@ -6,9 +6,12 @@ let scrollLeft;
 slider.addEventListener('mousedown', (e) => {
   isDown = true;
   slider.classList.add('active');
-  // Get the initial click position relative to the container
+  
+  // Calculate the initial click point
+  // e.pageX is the mouse position, slider.offsetLeft is the container's start
   startX = e.pageX - slider.offsetLeft;
-  // Record the initial scroll position
+  
+  // Record the scroll position at the moment of click
   scrollLeft = slider.scrollLeft;
 });
 
@@ -23,14 +26,17 @@ slider.addEventListener('mouseup', () => {
 });
 
 slider.addEventListener('mousemove', (e) => {
-  if (!isDown) return; // stop the fn from running if mouse is not down
-  e.preventDefault();
+  if (!isDown) return; // Stop the function from running if mouse is not held down
   
-  // Calculate current mouse position
+  e.preventDefault(); // Prevent text selection or accidental drags
+  
+  // Current mouse position
   const x = e.pageX - slider.offsetLeft;
-  // Calculate distance moved (multiplied by a factor for "natural" feel)
+  
+  // Calculate the distance moved
+  // The multiplier (3) makes the scroll feel more responsive ("walk" speed)
   const walk = (x - startX) * 3; 
   
-  // Update scroll position
+  // Update the scroll position of the container
   slider.scrollLeft = scrollLeft - walk;
 });
