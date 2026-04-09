@@ -1,20 +1,15 @@
 const slider = document.querySelector('.items');
 
 let isDown = false;
-let startX;
-let scrollLeft;
+let startX = 0;
+let scrollLeft = 0;
 
 slider.addEventListener('mousedown', (e) => {
   isDown = true;
   slider.classList.add('active');
-  
-  startX = e.pageX - slider.offsetLeft;
-  scrollLeft = slider.scrollLeft;
-});
 
-slider.addEventListener('mouseleave', () => {
-  isDown = false;
-  slider.classList.remove('active');
+  startX = e.clientX; // ✅ use clientX
+  scrollLeft = slider.scrollLeft;
 });
 
 slider.addEventListener('mouseup', () => {
@@ -22,13 +17,18 @@ slider.addEventListener('mouseup', () => {
   slider.classList.remove('active');
 });
 
+slider.addEventListener('mouseleave', () => {
+  isDown = false;
+  slider.classList.remove('active');
+});
+
 slider.addEventListener('mousemove', (e) => {
   if (!isDown) return;
-  
+
   e.preventDefault();
-  
-  const x = e.pageX - slider.offsetLeft;
-  const walk = (x - startX) * 2; // speed multiplier
-  
+
+  const x = e.clientX; // ✅ use clientX
+  const walk = (x - startX);
+
   slider.scrollLeft = scrollLeft - walk;
 });
