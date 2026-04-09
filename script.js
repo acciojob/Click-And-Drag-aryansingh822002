@@ -1,4 +1,5 @@
 const slider = document.querySelector('.items');
+
 let isDown = false;
 let startX;
 let scrollLeft;
@@ -7,11 +8,7 @@ slider.addEventListener('mousedown', (e) => {
   isDown = true;
   slider.classList.add('active');
   
-  // Calculate the initial click point
-  // e.pageX is the mouse position, slider.offsetLeft is the container's start
   startX = e.pageX - slider.offsetLeft;
-  
-  // Record the scroll position at the moment of click
   scrollLeft = slider.scrollLeft;
 });
 
@@ -26,17 +23,12 @@ slider.addEventListener('mouseup', () => {
 });
 
 slider.addEventListener('mousemove', (e) => {
-  if (!isDown) return; // Stop the function from running if mouse is not held down
+  if (!isDown) return;
   
-  e.preventDefault(); // Prevent text selection or accidental drags
+  e.preventDefault();
   
-  // Current mouse position
   const x = e.pageX - slider.offsetLeft;
+  const walk = (x - startX) * 2; // speed multiplier
   
-  // Calculate the distance moved
-  // The multiplier (3) makes the scroll feel more responsive ("walk" speed)
-  const walk = (x - startX) * 3; 
-  
-  // Update the scroll position of the container
   slider.scrollLeft = scrollLeft - walk;
 });
